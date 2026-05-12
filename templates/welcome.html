@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - SNMS</title>
+
+    <!-- Welcome CSS -->
+    <link rel="stylesheet" href="{{url_for('static',filename='welcome.css')}}">
+</head>
+
+<body>
+
+    <!-- Floating Circles -->
+
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+
+    <!-- Main Container -->
+
+    <div class="container">
+
+        <h1>Welcome to SNMS</h1>
+
+        <p>
+            Smart Notes Management System <br>
+            Store, manage and access your notes anytime.
+        </p>
+
+        <!-- Features -->
+
+        <div class="features">
+
+            <div class="feature-box">
+                <h3>📚 Notes</h3>
+                <p>Create and manage notes easily.</p>
+            </div>
+
+            <div class="feature-box">
+                <h3>🔒 Secure</h3>
+                <p>Your data stays protected.</p>
+            </div>
+
+            <div class="feature-box">
+                <h3>⚡ Fast</h3>
+                <p>Quick and smooth experience.</p>
+            </div>
+
+        </div>
+
+        <!-- Buttons -->
+
+        <div class="btn-group">
+
+            <a href="{{url_for('register')}}">
+                <button class="register-btn">
+                    Register
+                </button>
+            </a>
+
+            <a href="{{url_for('login')}}">
+                <button class="login-btn">
+                    Login
+                </button>
+            </a>
+
+        </div>
+
+        <!-- Footer -->
+
+        <div class="footer">
+            © 2026 SNMS Project | Designed with ❤️
+        </div>
+
+    </div>
+
+</body>
+</html>
