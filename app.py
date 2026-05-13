@@ -254,4 +254,52 @@ def getexceldata():
         columns=['Notesid','Notestitle','Notesdescription','created_at']
         array_data.insert(0,columns)
         return excel.make_response_from_array(array_data,'xlsx',file_name='Allnotesdata')
+@app.route('/fileupload',methods=['GET','POST'])
+def fileupload():
+    if not session.get('user'):
+        flash('pls login to access dashboard features')
+        return redirect(url_for('userlogin'))
+    if request.method=='POST':
+        user_filedata=request.files['filesdata']
+        # print(user_filedata)
+        # print(user_filedata.read())
+        # print(user_filedata.filename)
+        fname=user_filedata.filename
+        fdata=user_filedata.read()
+        try:
+            cursor=mydb.cursor(buffered=True)
+            cursor.execute('select userid from userdata where useremail=%s',[session.get('user')])
+            user_id=cursor.fetchone()[0]
+            cursor.execute('insert into filesdata(filename,filedata,userid) values(%s,%s,%s)',[fname,fdata,user_id])
+            mydb.commit()
+            cursor.close()
+        except Exception as e:
+            print(e)
+            flash('could not store file details')
+            return redirect(url_for('fileupload'))
+        else:
+            flash('file uploaded successsfully')
+            return redirect(url_for('fileupload'))
+    return render_template('fileupload.html')
+@app.route('/viewallfiles')
+def viewallfiles():
+    if  not session.get('user'):
+        flash('pls login to view all notes')
+        return redirect(url_for('login'))
+    try:
+        cursor=mydb.cursor(buffered=True)
+        cursor.execute('select userid from userdata where useremail=%s',[session.get('user')])
+        user_id=cursor.fetchone()[0]
+        cursor.execute('select filesid,filename,created_at from filesdata where userid=%s',[user_id])
+        stored_allfilesdata=cursor.fetchall()
+        # print(stored_allnotesdata)
+        cursor.close()
+    except Exception as e:
+        print(e)
+        flash('could not fetch file details')
+        return redirect(url_for('dashboard'))
+    else:
+        return render_template('viewallfiles.html',
+        stored_allfilesdata=stored_allfilesdata)
+    
 app.run(debug=True,use_reloader=True)
