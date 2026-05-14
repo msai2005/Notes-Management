@@ -1,10 +1,12 @@
-from flask import Flask,request,redirect,url_for,render_template,flash,session#session package store
+from flask import Flask,request,redirect,url_for,render_template,flash,session,send_file#session package store
 from flask_session import Session # fro secure
 from otp import genotp
 from cmail import sendmail
 from stoken import endata,dndata
 import mysql.connector
+import regex as re
 import flask_excel as excel
+from io import BytesIO
 mydb=mysql.connector.connect(user='root',password='krishna',host='localhost',db='notes')
 app=Flask(__name__)
 excel.init_excel(app)
@@ -301,5 +303,78 @@ def viewallfiles():
     else:
         return render_template('viewallfiles.html',
         stored_allfilesdata=stored_allfilesdata)
-    
+@app.route('/deletfile/<fid>')
+def deletefile(fid):
+    if not session.get('user'):
+        flash('pls login first')
+        return redirect(url_for('login'))
+    try:
+        cursor=mydb.cursor(buffered=True)
+        cursor.execute('select userid from userdata where useremail=%s',[session.get('user')])
+        user_id=cursor.fetchone()[0]
+        cursor.execute('delete from filesdata where userid=%s and filesid=%s',[user_id,fid])
+        mydb.commit()
+        cursor.close()
+    except Exception as e:
+        # print(e)
+        flash('Could not delete file details')
+        return redirect(url_for('dashboard'))
+    else:
+        flash('file deleted succesfully')
+        return redirect(url_for('viewallfiles'))
+@app.route('/viewfile/<fid>')
+def viewfile(fid):
+    if not session.get('user'):
+        flash('pls login to view notes details')
+        return redirect(url_for('login'))
+    try:
+        cursor=mydb.cursor(buffered=True)
+        cursor.execute('select userid from userdata where useremail=%s',[session.get('user')])
+        user_id=cursor.fetchone()[0]
+        cursor.execute('select filesid,filename,filedata,created_at from filesdata where userid=%s and filesid=%s',[user_id,fid])
+        stored_filesdata=cursor.fetchone()
+        cursor.close()
+    except Exception as e:
+        print(e)
+        flash('Could not fetch file details')
+        return redirect(url_for('dashboard'))
+    else:
+        bytes_array=BytesIO(stored_filesdata[2])
+        return send_file(bytes_array,as_attachment=False,download_name=stored_filesdata[1])
+@app.route('/downloadfile/<fid>')
+def downloadfile(fid):
+    if not session.get('user'):
+        flash('pls login to view notes details')
+        return redirect(url_for('login'))
+    try:
+        cursor=mydb.cursor(buffered=True)
+        cursor.execute('select userid from userdata where useremail=%s',[session.get('user')])
+        user_id=cursor.fetchone()[0]
+        cursor.execute('select filesid,filename,filedata,created_at from filesdata where userid=%s and filesid=%s',[user_id,fid])
+        stored_filesdata=cursor.fetchone()
+        cursor.close()
+    except Exception as e:
+        print(e)
+        flash('Could not fetch file details')
+        return redirect(url_for('dashboard'))
+    else:
+        bytes_array=BytesIO(stored_filesdata[2])
+        return send_file(bytes_array,as_attachment=True,download_name=stored_filesdata[1])
+@app.route('/searchdata',methods=['POST'])
+def searchdata():
+    if not session.get('user'):
+        flash('pls login to view notes details')
+        return redirect(url_for('login'))
+    try:
+        user_search=request.form['search']
+        strg=['A-Za-z0-9']
+        pattern=re.complie(f'^{strg}',re.IGNORECASE)
+        if pattern.match(user_search):
+            pass
+        else:
+            flash('Inavalid search data pls check')
+            return redirect(url_for('dashboard'))
+    except Exception as e:
+        flash('could not check search data pls check')
+
 app.run(debug=True,use_reloader=True)

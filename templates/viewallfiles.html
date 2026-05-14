@@ -34,15 +34,15 @@
                 <td data-label="Date">{{ note[2] }}</td>
 
                 <td data-label="View">
-                    <a href="#" class="view-btn">View</a>
+                    <a href="{{url_for('viewfile', fid=note[0])}}" class="view-btn">View</a>
                 </td>
 
                 <td data-label="Download">
-                    <a href="#" class="download-btn">Download</a>
+                    <a href="{{url_for('downloadfile', fid=note[0])}}" class="download-btn">Download</a>
                 </td>
 
                 <td data-label="Delete">
-                    <a href="#" class="delete-btn">Delete</a>
+                    <a href="{{url_for('deletefile', fid=note[0])}}" class="delete-btn">Delete</a>
                 </td>
             </tr>
 
