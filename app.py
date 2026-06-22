@@ -1,10 +1,10 @@
-from flask import Flask,request,redirect,url_for,render_template,flash,session,send_file#session package store
+from flask import Flask,request,redirect,url_for,render_template,flash,session,send_file,jsonify#session package store
 from flask_session import Session # fro secure
 from otp import genotp
 from cmail import sendmail
 from stoken import endata,dndata
 import mysql.connector
-import regex as re
+import re
 import flask_excel as excel
 from io import BytesIO
 mydb=mysql.connector.connect(user='root',password='krishna',host='localhost',db='notes')
@@ -363,18 +363,80 @@ def downloadfile(fid):
 @app.route('/searchdata',methods=['POST'])
 def searchdata():
     if not session.get('user'):
-        flash('pls login to view notes details')
+        flash('pls login to asscess dashboard')
         return redirect(url_for('login'))
     try:
-        user_search=request.form['search']
+        user_search=request.form['search'] #'' or '      dssfef'
         strg=['A-Za-z0-9']
-        pattern=re.complie(f'^{strg}',re.IGNORECASE)
+        pattern=re.compile(f'^{strg}', re.IGNORECASE)
         if pattern.match(user_search):
-            pass
+            try:
+                cursor=mydb.cursor(buffered=True)
+                cursor.execute('select userid from userdata where useremail=%s',[session.get('user')])
+                user_id=cursor.fetchone()[0]
+                cursor.execute('select notesid,notes_title,created_at from notesdata where (notesid like %s or notes_title like %s or created_at like %s or notes_description like %s) and userid=%s',[user_search+'%',user_search+'%',user_search+'%',user_search+'%',user_id])
+                search_result=cursor.fetchall() 
+                cursor.close()
+            except Exception as e:
+                print(e)
+                flash('could not fetch search data pls check')
+                return redirect(url_for('dashboard')) 
+            else:
+                return render_template('viewallnotes.html',stored_allnotesdata=search_result)            
         else:
-            flash('Inavalid search data pls check')
+            flash('Invalid search data pls check')
             return redirect(url_for('dashboard'))
     except Exception as e:
-        flash('could not check search data pls check')
-
+        print(e)
+        flash('could check search data pls check')
+        return redirect(url_for('dashboard'))
+@app.route('/forgotpassword',methods=['GET','POST'])
+def forgotpassword():
+    if request.method=='POST':
+        user_email=request.form['email']
+        try:
+            cursor=mydb.cursor(buffered=True)
+            cursor.execute('select count(*) from userdata where useremail=%s',[user_email])
+            email_count=cursor.fetchone()
+            cursor.close()
+        except Exception as e:
+            print(e)
+            flash('Could not verify user')
+            return redirect(url_for('login'))
+        else:
+            if email_count[0]==1:
+                subject=f'Reset link for SNM forgot password'
+                body=f"Use the given link for new password update {url_for('newpassword',useremail=endata(user_email),_external=True)}"
+                sendmail(to=user_email,subject=subject,body=body)
+                flash('reset link has been sent to given email')
+                return redirect(url_for('forgotpassword'))
+            elif email_count[0]==0:
+                flash('Email not registered pls check')
+                return redirect(url_for('login'))
+    return render_template('forgot.html')
+@app.route('/newpassword/<userdata>',methods=['GET','PUT'])
+def newpassword(userdata):
+    if request.method=='PUT':
+        try:
+            forgot_email=dndata(userdata)
+            print(forgot_email)
+        except Exception as e:
+            print(e)
+            flash('Could not verify the email')
+            return redirect(url_for('newpassword',userdata=userdata))
+        print(request.get_json())
+        npassword=request.get_json()['password']
+        try:
+            cursor=mydb.cursor(buffered=True)
+            cursor.execute('update userdata set userpassword=%s where useremail=%s',[npassword,forgot_email])
+            mydb.commit()
+            cursor.close()
+        except Exception as e:
+            print(e)
+            flash('could not update password')
+            return redirect(url_for('newpassword',userdata=userdata))
+        else:
+            flash('password updated successfully')
+            return jsonify({"message":"password updted successfully"})
+    return render_template('newpassword.html',userdata=userdata)
 app.run(debug=True,use_reloader=True)

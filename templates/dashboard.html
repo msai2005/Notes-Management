@@ -65,12 +65,14 @@
         </ul>
 
         <!-- Search -->
+         <form method="post" action="{{url_for('searchdata')}}">
         <div class="search-box">
-            <input type="text" placeholder="Search..." />
+            <input type="text"  name="search" placeholder="Search..." />
             <button>
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
         </div>
+    </form>
 
     </nav>
     <center>{% with messages = get_flashed_messages() %}
