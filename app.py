@@ -7,7 +7,7 @@ import mysql.connector
 import re
 import flask_excel as excel
 from io import BytesIO
-mydb=mysql.connector.connect(user='root',password='krishna',host='localhost',db='notes')
+mydb=mysql.connector.connect(user='root',password='',host='',db='')
 app=Flask(__name__)
 excel.init_excel(app)
 app.config['SESSION_TYPE']='filesystem'
