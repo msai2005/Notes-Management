@@ -116,6 +116,12 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### Configure Environment
+
+Copy `.env.example` to `.env` and replace the placeholder values with your
+MySQL credentials, freshly generated Flask and token secrets, and SMTP settings.
+Do not commit `.env`; it is excluded by `.gitignore`.
+
 ### Run Application
 
 ```bash

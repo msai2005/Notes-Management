@@ -1,3 +1,9 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask,request,redirect,url_for,render_template,flash,session,send_file,jsonify#session package store
 from flask_session import Session # fro secure
 from otp import genotp
@@ -7,12 +13,17 @@ import mysql.connector
 import re
 import flask_excel as excel
 from io import BytesIO
-mydb=mysql.connector.connect(user='root',password='',host='',db='')
+mydb=mysql.connector.connect(
+    user=os.environ['MYSQL_USER'],
+    password=os.environ['MYSQL_PASSWORD'],
+    host=os.environ['MYSQL_HOST'],
+    database=os.environ['MYSQL_DATABASE'],
+)
 app=Flask(__name__)
 excel.init_excel(app)
 app.config['SESSION_TYPE']='filesystem'
 Session(app) #integreat
-app.secret_key   ='code0909'
+app.secret_key = os.environ['FLASK_SECRET_KEY']
 @app.route('/')
 def home():
     return render_template('welcome.html')

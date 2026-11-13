@@ -1,6 +1,9 @@
+import os
+
 from itsdangerous import URLSafeTimedSerializer
-secret_key='snm2456'
-salt='otpverify'
+
+secret_key=os.environ['TOKEN_SECRET_KEY']
+salt=os.environ['TOKEN_SALT']
 def endata(data):
     serilalizer=URLSafeTimedSerializer(secret_key)
     return serilalizer.dumps(data,salt=salt)
